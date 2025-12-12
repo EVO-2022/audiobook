@@ -1,20 +1,18 @@
 # Environment files
 .env
 
-# Data directories (config and metadata)
-data/config/
-data/metadata/
-data/caddy/
-
-# Media directories (audiobooks and podcasts)
-media/audiobooks/
-media/podcasts/
-
-# Keep directory structure but ignore contents
+# Data directories (config and metadata) - ignore contents but keep .gitkeep
+data/config/*
 !data/config/.gitkeep
+data/metadata/*
 !data/metadata/.gitkeep
+data/caddy/*
 !data/caddy/.gitkeep
+
+# Media directories (audiobooks and podcasts) - ignore contents but keep .gitkeep
+media/audiobooks/*
 !media/audiobooks/.gitkeep
+media/podcasts/*
 !media/podcasts/.gitkeep
 
 # Logs
