@@ -1,24 +1,14 @@
-# Caddyfile for public domain with Let's Encrypt
-# IMPORTANT: Replace YOUR_DOMAIN_HERE with your actual domain (e.g., mom.example.com)
-# This file is used by docker-compose.prod.yml
-# The prod-up.sh script will attempt to replace YOUR_DOMAIN_HERE with the DOMAIN from .env
+# Caddyfile for local/internal-only access (no TLS)
+# Use this if you're using Cloudflare Tunnel or only accessing internally
+# To use: Copy this to Caddyfile or modify docker-compose.prod.yml to use this file
 
-YOUR_DOMAIN_HERE {
+:80 {
     reverse_proxy audiobookshelf:80
-
-    # Optional: Add security headers
-    header {
-        # Enable HSTS
-        Strict-Transport-Security "max-age=31536000;"
-        # Prevent clickjacking
-        X-Frame-Options "SAMEORIGIN"
-        # XSS protection
-        X-Content-Type-Options "nosniff"
-    }
-
-    # Optional: Logging
-    log {
-        output file /var/log/caddy/access.log
-    }
 }
+
+# Or use a local IP if accessing from other devices on your network
+# Replace 192.168.1.100 with your server's local IP
+# 192.168.1.100 {
+#     reverse_proxy audiobookshelf:80
+# }
 

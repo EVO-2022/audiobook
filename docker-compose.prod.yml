@@ -6,10 +6,11 @@ services:
     environment:
       - TZ=${TZ:-America/Chicago}
     volumes:
-      - ./data/config:/config
-      - ./data/metadata:/metadata
-      - ./media/audiobooks:/audiobooks
-      - ./media/podcasts:/podcasts
+      - /mnt/CLOUD/audiobook/data/config:/config
+      - /mnt/CLOUD/audiobook/data/metadata:/metadata
+      - /mnt/CLOUD/audiobook/media/rhonda:/rhonda
+      - /mnt/CLOUD/audiobook/media/scott:/scott
+      - /mnt/CLOUD/audiobook/media/podcasts:/podcasts
     networks:
       - audiobookshelf-network
 
@@ -18,13 +19,13 @@ services:
     container_name: caddy-proxy
     restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"
+      - "8082:80"
+      - "8443:443"
+      - "8443:443/udp"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - ./data/caddy/data:/data
-      - ./data/caddy/config:/config
+      - /mnt/CLOUD/audiobook/data/caddy/data:/data
+      - /mnt/CLOUD/audiobook/data/caddy/config:/config
     networks:
       - audiobookshelf-network
     depends_on:
