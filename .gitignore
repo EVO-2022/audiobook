@@ -1,0 +1,31 @@
+# Environment files
+.env
+
+# Data directories (config and metadata)
+data/config/
+data/metadata/
+data/caddy/
+
+# Media directories (audiobooks and podcasts)
+media/audiobooks/
+media/podcasts/
+
+# Keep directory structure but ignore contents
+!data/config/.gitkeep
+!data/metadata/.gitkeep
+!data/caddy/.gitkeep
+!media/audiobooks/.gitkeep
+!media/podcasts/.gitkeep
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.tar.gz
+backups/
+

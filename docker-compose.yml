@@ -1,0 +1,21 @@
+services:
+  audiobookshelf:
+    image: ghcr.io/advplyr/audiobookshelf:latest
+    container_name: audiobookshelf-dev
+    restart: unless-stopped
+    ports:
+      - "${ABS_PORT:-13378}:80"
+    environment:
+      - TZ=${TZ:-America/Chicago}
+    volumes:
+      - ./data/config:/config
+      - ./data/metadata:/metadata
+      - ./media/audiobooks:/audiobooks
+      - ./media/podcasts:/podcasts
+    networks:
+      - audiobookshelf-network
+
+networks:
+  audiobookshelf-network:
+    driver: bridge
+

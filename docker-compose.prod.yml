@@ -1,0 +1,36 @@
+services:
+  audiobookshelf:
+    image: ghcr.io/advplyr/audiobookshelf:latest
+    container_name: audiobookshelf-prod
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ:-America/Chicago}
+    volumes:
+      - ./data/config:/config
+      - ./data/metadata:/metadata
+      - ./media/audiobooks:/audiobooks
+      - ./media/podcasts:/podcasts
+    networks:
+      - audiobookshelf-network
+
+  caddy:
+    image: caddy:2
+    container_name: caddy-proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./data/caddy/data:/data
+      - ./data/caddy/config:/config
+    networks:
+      - audiobookshelf-network
+    depends_on:
+      - audiobookshelf
+
+networks:
+  audiobookshelf-network:
+    driver: bridge
+

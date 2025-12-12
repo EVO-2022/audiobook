@@ -1,0 +1,14 @@
+# Caddyfile for local/internal-only access (no TLS)
+# Use this if you're using Cloudflare Tunnel or only accessing internally
+# To use: Copy this to Caddyfile or modify docker-compose.prod.yml to use this file
+
+localhost {
+    reverse_proxy audiobookshelf:80
+}
+
+# Or use a local IP if accessing from other devices on your network
+# Replace 192.168.1.100 with your server's local IP
+# 192.168.1.100 {
+#     reverse_proxy audiobookshelf:80
+# }
+
