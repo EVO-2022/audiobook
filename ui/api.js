@@ -1,15 +1,15 @@
 // Audiobookshelf API Client
 class AudiobookshelfAPI {
     constructor() {
-        // Use the main domain for API calls (same origin, no CORS issues)
-        this.baseURL = window.location.hostname === 'new.rhonda.onl' 
-            ? 'https://rhonda.onl' 
-            : window.location.origin;
+        // Use same origin for API calls (Caddy proxies /api/* to audiobookshelf)
+        this.baseURL = window.location.origin;
         this.token = localStorage.getItem('abs_token');
     }
 
     async request(endpoint, options = {}) {
-        const url = `${this.baseURL}/api${endpoint}`;
+        // Don't prepend /api for root-level endpoints (login, logout, ping, status)
+        const isRootEndpoint = ['/login', '/logout', '/ping', '/status'].includes(endpoint);
+        const url = isRootEndpoint ? `${this.baseURL}${endpoint}` : `${this.baseURL}/api${endpoint}`;
         const headers = {
             'Content-Type': 'application/json',
             ...options.headers
@@ -76,7 +76,8 @@ class AudiobookshelfAPI {
 
     // Libraries
     async getLibraries() {
-        return this.request('/libraries');
+        const response = await this.request('/libraries');
+        return response.libraries || [];
     }
 
     async getLibrary(libraryId) {
@@ -115,7 +116,8 @@ class AudiobookshelfAPI {
 
     // Media URLs
     getItemCoverUrl(libraryId, itemId) {
-        return `${this.baseURL}/api/libraries/${libraryId}/items/${itemId}/cover`;
+        // Add token as query parameter for image requests (can't use headers)
+        return `${this.baseURL}/api/items/${itemId}/cover?token=${this.token}`;
     }
 
     getItemStreamUrl(libraryId, itemId, options = {}) {
@@ -123,7 +125,14 @@ class AudiobookshelfAPI {
             token: this.token,
             ...options
         });
-        return `${this.baseURL}/api/items/${itemId}/stream?${params}`;
+        return `${this.baseURL}/api/items/${itemId}/play?${params}`;
+    }
+
+    // Play an item
+    async playItem(itemId) {
+        return this.request(`/items/${itemId}/play`, {
+            method: 'POST'
+        });
     }
 }
 

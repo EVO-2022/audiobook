@@ -6,7 +6,10 @@ class App {
         this.currentItem = null;
         this.audioPlayer = null;
         this.currentSession = null;
-        
+        this.sleepTimer = null;
+        this.sleepTimerInterval = null;
+        this.sleepTimerEndTime = null;
+
         this.init();
     }
 
@@ -41,6 +44,36 @@ class App {
         // Back button
         document.getElementById('backBtn').addEventListener('click', () => {
             this.showLibraries();
+        });
+
+        // Playback speed controls
+        document.querySelectorAll('.speed-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                this.setPlaybackSpeed(parseFloat(e.target.dataset.speed));
+            });
+        });
+
+        // Sleep timer
+        document.getElementById('sleepTimerBtn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.toggleSleepTimerPopup();
+        });
+
+        document.querySelectorAll('.timer-option').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const minutes = parseInt(e.target.dataset.minutes);
+                this.setSleepTimer(minutes);
+                this.toggleSleepTimerPopup();
+            });
+        });
+
+        // Close popup when clicking outside
+        document.addEventListener('click', (e) => {
+            const popup = document.getElementById('sleepTimerPopup');
+            const btn = document.getElementById('sleepTimerBtn');
+            if (!popup.contains(e.target) && !btn.contains(e.target)) {
+                popup.style.display = 'none';
+            }
         });
     }
 
@@ -86,6 +119,7 @@ class App {
                 this.checkAuth();
             };
         }
+        document.getElementById('mainContent').style.display = 'block';
     }
 
     async loadLibraries() {
@@ -145,7 +179,7 @@ class App {
             const author = item.media?.metadata?.authorName || item.author || 'Unknown Author';
 
             card.innerHTML = `
-                <img class="item-cover" src="${coverUrl}" alt="${title}" onerror="this.style.display='none'">
+                <img class="item-cover" src="${coverUrl}" alt="${title}" onerror="this.src='https://new.rhonda.onl/book_placeholder.jpg'">
                 <div class="item-info">
                     <h4>${title}</h4>
                     <p>${author}</p>
@@ -169,22 +203,30 @@ class App {
 
     async playItem(item) {
         this.currentItem = item;
-        
+
         // Initialize audio player if needed
         if (!this.audioPlayer) {
             this.audioPlayer = new Audio();
             this.setupAudioPlayer();
         }
 
-        const streamUrl = this.api.getItemStreamUrl(this.currentLibrary.id, item.id);
-        this.audioPlayer.src = streamUrl;
-
-        // Show player
-        this.showPlayer(item);
-        
-        // Try to play
         try {
-            await this.audioPlayer.play();
+            // Start playback session
+            const session = await this.api.playItem(item.id);
+
+            // Get the audio URL from the session
+            if (session.audioTracks && session.audioTracks.length > 0) {
+                const audioUrl = session.audioTracks[0].contentUrl;
+                this.audioPlayer.src = audioUrl;
+
+                // Show player
+                this.showPlayer(item);
+
+                // Try to play
+                await this.audioPlayer.play();
+            } else {
+                throw new Error('No audio tracks found');
+            }
         } catch (error) {
             console.error('Playback error:', error);
             alert('Failed to start playback. Please try again.');
@@ -264,6 +306,73 @@ class App {
         const mins = Math.floor(seconds / 60);
         const secs = Math.floor(seconds % 60);
         return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    setPlaybackSpeed(speed) {
+        if (!this.audioPlayer) return;
+
+        this.audioPlayer.playbackRate = speed;
+
+        // Update button states
+        document.querySelectorAll('.speed-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (parseFloat(btn.dataset.speed) === speed) {
+                btn.classList.add('active');
+            }
+        });
+    }
+
+    toggleSleepTimerPopup() {
+        const popup = document.getElementById('sleepTimerPopup');
+        popup.style.display = popup.style.display === 'none' ? 'block' : 'none';
+    }
+
+    setSleepTimer(minutes) {
+        // Clear any existing timer
+        if (this.sleepTimerInterval) {
+            clearInterval(this.sleepTimerInterval);
+            this.sleepTimerInterval = null;
+        }
+
+        const badge = document.getElementById('sleepTimerBadge');
+
+        if (minutes === 0) {
+            // Turn off timer
+            this.sleepTimerEndTime = null;
+            badge.style.display = 'none';
+            return;
+        }
+
+        // Set new timer
+        this.sleepTimerEndTime = Date.now() + (minutes * 60 * 1000);
+        badge.style.display = 'inline';
+
+        // Update display immediately
+        this.updateSleepTimerDisplay();
+
+        // Update every second
+        this.sleepTimerInterval = setInterval(() => {
+            this.updateSleepTimerDisplay();
+
+            if (Date.now() >= this.sleepTimerEndTime) {
+                // Timer expired
+                if (this.audioPlayer) {
+                    this.audioPlayer.pause();
+                }
+                this.setSleepTimer(0);
+            }
+        }, 1000);
+    }
+
+    updateSleepTimerDisplay() {
+        if (!this.sleepTimerEndTime) return;
+
+        const remaining = Math.max(0, this.sleepTimerEndTime - Date.now());
+        const mins = Math.floor(remaining / 60000);
+        const secs = Math.floor((remaining % 60000) / 1000);
+
+        const badge = document.getElementById('sleepTimerBadge');
+        badge.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
     }
 }
 

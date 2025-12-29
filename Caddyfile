@@ -2,16 +2,55 @@
 # Use this if you're using Cloudflare Tunnel or only accessing internally
 # To use: Copy this to Caddyfile or modify docker-compose.prod.yml to use this file
 
-# Main Audiobookshelf UI
-:80 {
-    reverse_proxy audiobookshelf:80
+# New UI at new.rhonda.onl (when accessed via Cloudflare Tunnel)
+# Note: More specific host matches must come BEFORE catch-all matchers
+http://new.rhonda.onl {
+    # Proxy authentication and status endpoints (root level, no /api prefix)
+    handle /login {
+        reverse_proxy audiobookshelf:80
+    }
+    handle /logout {
+        reverse_proxy audiobookshelf:80
+    }
+    handle /ping {
+        reverse_proxy audiobookshelf:80
+    }
+    handle /status {
+        reverse_proxy audiobookshelf:80
+    }
+
+    # Proxy API requests to audiobookshelf backend (more specific routes first)
+    handle /api/items/* {
+        reverse_proxy audiobookshelf:80
+    }
+    handle /api/* {
+        reverse_proxy audiobookshelf:80
+    }
+
+    # Proxy streaming endpoints
+    handle /s/* {
+        reverse_proxy audiobookshelf:80
+    }
+    handle /hls/* {
+        reverse_proxy audiobookshelf:80
+    }
+
+    # Serve placeholder image
+    handle /book_placeholder.jpg {
+        reverse_proxy audiobookshelf:80
+    }
+
+    # Disable caching for JS and CSS files during development
+    header /*.js Cache-Control "no-cache, no-store, must-revalidate"
+    header /*.css Cache-Control "no-cache, no-store, must-revalidate"
+
+    # Serve static UI files
+    reverse_proxy new-ui:80
 }
 
-# New UI at new.rhonda.onl (when accessed via Cloudflare Tunnel)
-# Note: DNS needs to be configured in Cloudflare to point new.rhonda.onl to the tunnel
-# This route will work once DNS is set up
-new.rhonda.onl {
-    reverse_proxy new-ui:80
+# Main Audiobookshelf UI (catch-all for everything else on port 80)
+:80 {
+    reverse_proxy audiobookshelf:80
 }
 
 # Or use a local IP if accessing from other devices on your network
