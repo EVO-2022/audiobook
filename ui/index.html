@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audiobookshelf - New UI</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <h1 class="logo">Audiobookshelf</h1>
+            <div class="user-menu" id="userMenu">
+                <button class="user-btn" id="loginBtn">Login</button>
+            </div>
+        </header>
+
+        <!-- Login Modal -->
+        <div class="modal" id="loginModal">
+            <div class="modal-content">
+                <span class="close" id="closeModal">&times;</span>
+                <h2>Login</h2>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Login</button>
+                </form>
+                <div class="error-message" id="errorMessage"></div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="main-content" id="mainContent">
+            <!-- Libraries Section -->
+            <section class="libraries-section" id="librariesSection" style="display: none;">
+                <h2>Your Libraries</h2>
+                <div class="libraries-grid" id="librariesGrid"></div>
+            </section>
+
+            <!-- Library View -->
+            <section class="library-view" id="libraryView" style="display: none;">
+                <button class="back-btn" id="backBtn">← Back</button>
+                <h2 id="libraryTitle"></h2>
+                <div class="items-grid" id="itemsGrid"></div>
+            </section>
+
+            <!-- Player -->
+            <div class="player" id="player" style="display: none;">
+                <div class="player-info">
+                    <img class="player-cover" id="playerCover" src="" alt="Cover">
+                    <div class="player-details">
+                        <h3 id="playerTitle"></h3>
+                        <p id="playerAuthor"></p>
+                    </div>
+                </div>
+                <div class="player-controls">
+                    <button class="control-btn" id="rewindBtn">⏪ 30s</button>
+                    <button class="control-btn play-pause" id="playPauseBtn">▶</button>
+                    <button class="control-btn" id="forwardBtn">⏩ 30s</button>
+                </div>
+                <div class="player-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="time-display">
+                        <span id="currentTime">0:00</span>
+                        <span id="totalTime">0:00</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="api.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
+

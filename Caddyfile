@@ -2,8 +2,16 @@
 # Use this if you're using Cloudflare Tunnel or only accessing internally
 # To use: Copy this to Caddyfile or modify docker-compose.prod.yml to use this file
 
+# Main Audiobookshelf UI
 :80 {
     reverse_proxy audiobookshelf:80
+}
+
+# New UI at new.rhonda.onl (when accessed via Cloudflare Tunnel)
+# Note: DNS needs to be configured in Cloudflare to point new.rhonda.onl to the tunnel
+# This route will work once DNS is set up
+new.rhonda.onl {
+    reverse_proxy new-ui:80
 }
 
 # Or use a local IP if accessing from other devices on your network

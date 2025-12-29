@@ -23,6 +23,7 @@ A complete self-hosted Audiobookshelf system designed for easy administration an
 - ✅ Simple backup scripts
 - ✅ Elder-friendly mobile access
 - ✅ Admin-managed library, user-friendly listening
+- ✅ Custom new UI available at `new.rhonda.onl` (runs alongside main UI)
 
 ## Quick Start (Local Development)
 
@@ -639,8 +640,45 @@ audiobook/
 ├── media/
 │   ├── audiobooks/            # Audiobook files (gitignored)
 │   └── podcasts/              # Podcast files (gitignored)
+├── ui/                        # New custom UI (new.rhonda.onl)
+│   ├── index.html            # Main UI page
+│   ├── styles.css            # Dark modern styling
+│   ├── api.js                # API client
+│   └── app.js                # Application logic
+├── ui/                        # New custom UI (new.rhonda.onl)
+│   ├── index.html            # Main UI page
+│   ├── styles.css            # Dark modern styling
+│   ├── api.js                # API client
+│   └── app.js                # Application logic
 └── README.md                  # This file
 ```
+
+## New Custom UI
+
+A custom dark, modern UI is available at **`new.rhonda.onl`** that runs alongside the main Audiobookshelf interface.
+
+### Features
+- Dark modern theme with clean design
+- Mobile-friendly responsive layout
+- Direct integration with Audiobookshelf API
+- Easy to customize and modify
+
+### Access
+- **URL**: `https://new.rhonda.onl` (via Cloudflare Tunnel)
+- Uses the same authentication as the main UI
+- Shares the same libraries and content
+
+### Development
+- UI files are in the `ui/` directory
+- Served by nginx container (`new-ui` service)
+- Changes to static files are live immediately (no rebuild needed)
+- See `ui/README.md` for more details
+
+### Removing the New UI
+If you want to remove it:
+1. Remove `new-ui` service from `docker-compose.prod.yml`
+2. Remove `new.rhonda.onl` block from `Caddyfile`
+3. Restart: `docker compose -f docker-compose.prod.yml up -d`
 
 ## Support & Resources
 

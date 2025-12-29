@@ -14,6 +14,15 @@ services:
     networks:
       - audiobookshelf-network
 
+  new-ui:
+    image: nginx:alpine
+    container_name: new-ui-prod
+    restart: unless-stopped
+    volumes:
+      - ./ui:/usr/share/nginx/html:ro
+    networks:
+      - audiobookshelf-network
+
   caddy:
     image: caddy:2
     container_name: caddy-proxy
@@ -30,6 +39,7 @@ services:
       - audiobookshelf-network
     depends_on:
       - audiobookshelf
+      - new-ui
 
 networks:
   audiobookshelf-network:
