@@ -103,13 +103,16 @@ class AudiobookshelfAPI {
         return this.request(`/sessions/${sessionId}`);
     }
 
-    async updatePlaybackProgress(sessionId, currentTime, duration, progress) {
-        return this.request(`/sessions/${sessionId}/sync`, {
-            method: 'PATCH',
+    async updatePlaybackProgress(libraryItemId, currentTime, duration, isFinished = false) {
+        const progress = duration > 0 ? currentTime / duration : 0;
+        return this.request('/me/progress', {
+            method: 'POST',
             body: JSON.stringify({
+                libraryItemId,
+                progress,
                 currentTime,
-                duration,
-                progress
+                isFinished,
+                duration
             })
         });
     }
@@ -133,6 +136,41 @@ class AudiobookshelfAPI {
         return this.request(`/items/${itemId}/play`, {
             method: 'POST'
         });
+    }
+
+    // Bookmarks
+    async getBookmarks() {
+        const response = await this.request('/me/items-in-progress');
+        return response;
+    }
+
+    async createBookmark(libraryItemId, time, title) {
+        return this.request('/me/bookmarks', {
+            method: 'POST',
+            body: JSON.stringify({
+                libraryItemId,
+                time,
+                title
+            })
+        });
+    }
+
+    async updateBookmark(bookmarkId, updates) {
+        return this.request(`/me/bookmarks/${bookmarkId}`, {
+            method: 'PATCH',
+            body: JSON.stringify(updates)
+        });
+    }
+
+    async deleteBookmark(bookmarkId) {
+        return this.request(`/me/bookmarks/${bookmarkId}`, {
+            method: 'DELETE'
+        });
+    }
+
+    // Get item details (includes chapters)
+    async getItem(itemId) {
+        return this.request(`/items/${itemId}`);
     }
 }
 

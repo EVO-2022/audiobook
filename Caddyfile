@@ -5,47 +5,25 @@
 # New UI at new.rhonda.onl (when accessed via Cloudflare Tunnel)
 # Note: More specific host matches must come BEFORE catch-all matchers
 http://new.rhonda.onl {
-    # Proxy authentication and status endpoints (root level, no /api prefix)
-    handle /login {
-        reverse_proxy audiobookshelf:80
-    }
-    handle /logout {
-        reverse_proxy audiobookshelf:80
-    }
-    handle /ping {
-        reverse_proxy audiobookshelf:80
-    }
-    handle /status {
-        reverse_proxy audiobookshelf:80
+    # Match everything that is NOT the new UI static files
+    @backend {
+        not path /*.js /*.css /*.html /
+        not path /index.html
     }
 
-    # Proxy API requests to audiobookshelf backend (more specific routes first)
-    handle /api/items/* {
-        reverse_proxy audiobookshelf:80
-    }
-    handle /api/* {
-        reverse_proxy audiobookshelf:80
+    # Everything else goes to new UI static files
+    @ui {
+        path /*.js /*.css /*.html /
+        path /index.html
     }
 
-    # Proxy streaming endpoints
-    handle /s/* {
-        reverse_proxy audiobookshelf:80
-    }
-    handle /hls/* {
-        reverse_proxy audiobookshelf:80
-    }
+    # Route backend requests (API, auth, streaming) to audiobookshelf
+    reverse_proxy @backend audiobookshelf:80
 
-    # Serve placeholder image
-    handle /book_placeholder.jpg {
-        reverse_proxy audiobookshelf:80
-    }
-
-    # Disable caching for JS and CSS files during development
-    header /*.js Cache-Control "no-cache, no-store, must-revalidate"
-    header /*.css Cache-Control "no-cache, no-store, must-revalidate"
-
-    # Serve static UI files
-    reverse_proxy new-ui:80
+    # Route UI static files to new-ui nginx
+    header @ui /*.js Cache-Control "no-cache, no-store, must-revalidate"
+    header @ui /*.css Cache-Control "no-cache, no-store, must-revalidate"
+    reverse_proxy @ui new-ui:80
 }
 
 # Main Audiobookshelf UI (catch-all for everything else on port 80)

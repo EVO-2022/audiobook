@@ -9,6 +9,10 @@ class App {
         this.sleepTimer = null;
         this.sleepTimerInterval = null;
         this.sleepTimerEndTime = null;
+        this.chapters = [];
+        this.bookmarks = [];
+        this.progressSyncInterval = null;
+        this.lastProgressSync = 0;
 
         this.init();
     }
@@ -47,9 +51,16 @@ class App {
         });
 
         // Playback speed controls
-        document.querySelectorAll('.speed-btn').forEach(btn => {
+        document.getElementById('playbackSpeedBtn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.togglePlaybackSpeedPopup();
+        });
+
+        document.querySelectorAll('.speed-option').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                this.setPlaybackSpeed(parseFloat(e.target.dataset.speed));
+                const speed = parseFloat(e.target.dataset.speed);
+                this.setPlaybackSpeed(speed);
+                this.togglePlaybackSpeedPopup();
             });
         });
 
@@ -67,12 +78,44 @@ class App {
             });
         });
 
-        // Close popup when clicking outside
+        // Chapters
+        document.getElementById('chaptersBtn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.toggleChaptersPopup();
+        });
+
+        // Bookmarks
+        document.getElementById('bookmarksBtn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.toggleBookmarksPopup();
+        });
+
+        document.getElementById('addBookmarkBtn').addEventListener('click', () => {
+            this.addBookmark();
+        });
+
+        // Close popups when clicking outside
         document.addEventListener('click', (e) => {
-            const popup = document.getElementById('sleepTimerPopup');
-            const btn = document.getElementById('sleepTimerBtn');
-            if (!popup.contains(e.target) && !btn.contains(e.target)) {
-                popup.style.display = 'none';
+            const speedPopup = document.getElementById('playbackSpeedPopup');
+            const speedBtn = document.getElementById('playbackSpeedBtn');
+            const timerPopup = document.getElementById('sleepTimerPopup');
+            const timerBtn = document.getElementById('sleepTimerBtn');
+            const chaptersPopup = document.getElementById('chaptersPopup');
+            const chaptersBtn = document.getElementById('chaptersBtn');
+            const bookmarksPopup = document.getElementById('bookmarksPopup');
+            const bookmarksBtn = document.getElementById('bookmarksBtn');
+
+            if (!speedPopup.contains(e.target) && !speedBtn.contains(e.target)) {
+                speedPopup.style.display = 'none';
+            }
+            if (!timerPopup.contains(e.target) && !timerBtn.contains(e.target)) {
+                timerPopup.style.display = 'none';
+            }
+            if (!chaptersPopup.contains(e.target) && !chaptersBtn.contains(e.target)) {
+                chaptersPopup.style.display = 'none';
+            }
+            if (!bookmarksPopup.contains(e.target) && !bookmarksBtn.contains(e.target)) {
+                bookmarksPopup.style.display = 'none';
             }
         });
     }
@@ -213,6 +256,8 @@ class App {
         try {
             // Start playback session
             const session = await this.api.playItem(item.id);
+            this.currentSession = session;
+            console.log('Playback session:', session);
 
             // Get the audio URL from the session
             if (session.audioTracks && session.audioTracks.length > 0) {
@@ -221,6 +266,15 @@ class App {
 
                 // Show player
                 this.showPlayer(item);
+
+                // Load chapters and bookmarks
+                await Promise.all([
+                    this.loadChapters(),
+                    this.loadBookmarks()
+                ]);
+
+                // Start progress tracking
+                this.startProgressSync();
 
                 // Try to play
                 await this.audioPlayer.play();
@@ -236,6 +290,7 @@ class App {
     setupAudioPlayer() {
         this.audioPlayer.addEventListener('timeupdate', () => {
             this.updateProgress();
+            this.syncProgressIfNeeded();
         });
 
         this.audioPlayer.addEventListener('loadedmetadata', () => {
@@ -244,6 +299,17 @@ class App {
 
         this.audioPlayer.addEventListener('ended', () => {
             // Handle playback end
+            this.updatePlayPauseButton();
+            this.syncProgress(true); // Force sync on end
+        });
+
+        this.audioPlayer.addEventListener('play', () => {
+            this.updatePlayPauseButton();
+        });
+
+        this.audioPlayer.addEventListener('pause', () => {
+            this.updatePlayPauseButton();
+            this.syncProgress(true); // Force sync on pause
         });
     }
 
@@ -260,13 +326,13 @@ class App {
         document.getElementById('playerCover').src = coverUrl;
 
         // Setup control buttons
-        document.getElementById('playPauseBtn').onclick = () => {
+        const playPauseBtn = document.getElementById('playPauseBtn');
+
+        playPauseBtn.onclick = () => {
             if (this.audioPlayer.paused) {
                 this.audioPlayer.play();
-                document.getElementById('playPauseBtn').textContent = '⏸';
             } else {
                 this.audioPlayer.pause();
-                document.getElementById('playPauseBtn').textContent = '▶';
             }
         };
 
@@ -286,6 +352,15 @@ class App {
         if (this.audioPlayer) {
             this.audioPlayer.pause();
         }
+
+        // Stop progress tracking
+        this.stopProgressSync();
+
+        // Final progress sync before closing
+        if (this.currentItem && this.audioPlayer) {
+            this.syncProgress(true);
+        }
+
         document.getElementById('player').style.display = 'none';
     }
 
@@ -314,12 +389,20 @@ class App {
         this.audioPlayer.playbackRate = speed;
 
         // Update button states
-        document.querySelectorAll('.speed-btn').forEach(btn => {
+        document.querySelectorAll('.speed-option').forEach(btn => {
             btn.classList.remove('active');
             if (parseFloat(btn.dataset.speed) === speed) {
                 btn.classList.add('active');
             }
         });
+
+        // Update button text
+        document.getElementById('playbackSpeedBtn').textContent = `${speed}x`;
+    }
+
+    togglePlaybackSpeedPopup() {
+        const popup = document.getElementById('playbackSpeedPopup');
+        popup.style.display = popup.style.display === 'none' ? 'block' : 'none';
     }
 
     toggleSleepTimerPopup() {
@@ -373,6 +456,244 @@ class App {
 
         const badge = document.getElementById('sleepTimerBadge');
         badge.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    // Chapters functionality
+    toggleChaptersPopup() {
+        const popup = document.getElementById('chaptersPopup');
+        popup.style.display = popup.style.display === 'none' ? 'block' : 'none';
+    }
+
+    async loadChapters() {
+        if (!this.currentItem) return;
+
+        try {
+            const itemDetails = await this.api.getItem(this.currentItem.id);
+            this.chapters = itemDetails.media?.chapters || [];
+            this.renderChapters();
+        } catch (error) {
+            console.error('Failed to load chapters:', error);
+        }
+    }
+
+    renderChapters() {
+        const list = document.getElementById('chaptersList');
+
+        if (!this.chapters || this.chapters.length === 0) {
+            list.innerHTML = '<p class="empty-message">No chapters available</p>';
+            return;
+        }
+
+        list.innerHTML = '';
+        this.chapters.forEach((chapter, index) => {
+            const item = document.createElement('div');
+            item.className = 'chapter-item';
+
+            const title = document.createElement('div');
+            title.className = 'chapter-title';
+            title.textContent = chapter.title || `Chapter ${index + 1}`;
+
+            const time = document.createElement('div');
+            time.className = 'chapter-time';
+            time.textContent = this.formatTime(chapter.start);
+
+            item.appendChild(title);
+            item.appendChild(time);
+
+            item.addEventListener('click', () => {
+                this.jumpToTime(chapter.start);
+                this.toggleChaptersPopup();
+            });
+
+            list.appendChild(item);
+        });
+    }
+
+    // Bookmarks functionality
+    toggleBookmarksPopup() {
+        const popup = document.getElementById('bookmarksPopup');
+        popup.style.display = popup.style.display === 'none' ? 'block' : 'none';
+    }
+
+    async loadBookmarks() {
+        if (!this.currentItem) return;
+
+        try {
+            const itemDetails = await this.api.getItem(this.currentItem.id);
+            this.bookmarks = itemDetails.userMediaProgress?.bookmarks || [];
+            this.renderBookmarks();
+        } catch (error) {
+            console.error('Failed to load bookmarks:', error);
+        }
+    }
+
+    renderBookmarks() {
+        const list = document.getElementById('bookmarksList');
+
+        if (!this.bookmarks || this.bookmarks.length === 0) {
+            list.innerHTML = '<p class="empty-message">No bookmarks yet</p>';
+            return;
+        }
+
+        list.innerHTML = '';
+        this.bookmarks.forEach((bookmark) => {
+            const item = document.createElement('div');
+            item.className = 'bookmark-item';
+
+            const info = document.createElement('div');
+            info.className = 'bookmark-info';
+
+            const title = document.createElement('div');
+            title.className = 'bookmark-title';
+            title.textContent = bookmark.title || 'Bookmark';
+
+            const time = document.createElement('div');
+            time.className = 'bookmark-time';
+            time.textContent = this.formatTime(bookmark.time);
+
+            info.appendChild(title);
+            info.appendChild(time);
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'bookmark-delete';
+            deleteBtn.textContent = '×';
+            deleteBtn.onclick = (e) => {
+                e.stopPropagation();
+                this.deleteBookmark(bookmark.id);
+            };
+
+            item.appendChild(info);
+            item.appendChild(deleteBtn);
+
+            item.addEventListener('click', () => {
+                this.jumpToTime(bookmark.time);
+                this.toggleBookmarksPopup();
+            });
+
+            list.appendChild(item);
+        });
+    }
+
+    async addBookmark() {
+        if (!this.audioPlayer || !this.currentItem) return;
+
+        const currentTime = this.audioPlayer.currentTime;
+        const title = prompt('Bookmark title:', `Bookmark at ${this.formatTime(currentTime)}`);
+
+        if (!title) return;
+
+        try {
+            await this.api.createBookmark(this.currentItem.id, currentTime, title);
+            await this.loadBookmarks();
+        } catch (error) {
+            console.error('Failed to create bookmark:', error);
+            alert('Failed to create bookmark. Please try again.');
+        }
+    }
+
+    async deleteBookmark(bookmarkId) {
+        if (!confirm('Delete this bookmark?')) return;
+
+        try {
+            await this.api.deleteBookmark(bookmarkId);
+            await this.loadBookmarks();
+        } catch (error) {
+            console.error('Failed to delete bookmark:', error);
+            alert('Failed to delete bookmark. Please try again.');
+        }
+    }
+
+    jumpToTime(time) {
+        if (!this.audioPlayer) return;
+        this.audioPlayer.currentTime = time;
+    }
+
+    updatePlayPauseButton() {
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        if (!playPauseBtn) return;
+
+        const playIcon = playPauseBtn.querySelector('.play-icon');
+        const pauseIcon = playPauseBtn.querySelector('.pause-icon');
+
+        if (this.audioPlayer && !this.audioPlayer.paused) {
+            // Currently playing - show pause icon
+            playIcon.style.display = 'none';
+            pauseIcon.style.display = 'block';
+        } else {
+            // Currently paused - show play icon
+            playIcon.style.display = 'block';
+            pauseIcon.style.display = 'none';
+        }
+    }
+
+    // Progress tracking
+    startProgressSync() {
+        // Clear any existing interval
+        if (this.progressSyncInterval) {
+            clearInterval(this.progressSyncInterval);
+        }
+
+        // Sync progress every 30 seconds
+        this.progressSyncInterval = setInterval(() => {
+            this.syncProgress(false);
+        }, 30000);
+    }
+
+    syncProgressIfNeeded() {
+        // Sync every 10 seconds during playback
+        const now = Date.now();
+        if (now - this.lastProgressSync > 10000) {
+            this.syncProgress(false);
+        }
+    }
+
+    async syncProgress(force = false) {
+        if (!this.currentItem || !this.audioPlayer) {
+            console.log('Cannot sync progress - missing item or player');
+            return;
+        }
+
+        const currentTime = this.audioPlayer.currentTime;
+        const duration = this.audioPlayer.duration;
+
+        if (!duration || isNaN(duration) || isNaN(currentTime)) {
+            console.log('Cannot sync progress - invalid duration or time');
+            return;
+        }
+
+        // Only sync if forced or if we have meaningful progress
+        if (!force && currentTime < 1) return;
+
+        const progress = currentTime / duration;
+        const isFinished = this.audioPlayer.ended || (duration - currentTime) < 1;
+
+        console.log('Syncing progress:', {
+            libraryItemId: this.currentItem.id,
+            currentTime,
+            duration,
+            progress: Math.round(progress * 100) + '%',
+            isFinished
+        });
+
+        try {
+            await this.api.updatePlaybackProgress(
+                this.currentItem.id,
+                currentTime,
+                duration,
+                isFinished
+            );
+            this.lastProgressSync = Date.now();
+            console.log(`Progress synced successfully: ${Math.round(progress * 100)}%`);
+        } catch (error) {
+            console.error('Failed to sync progress:', error);
+        }
+    }
+
+    stopProgressSync() {
+        if (this.progressSyncInterval) {
+            clearInterval(this.progressSyncInterval);
+            this.progressSyncInterval = null;
+        }
     }
 }
 

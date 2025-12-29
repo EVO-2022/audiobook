@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Audiobookshelf - New UI</title>
-    <link rel="stylesheet" href="styles.css?v=9">
+    <link rel="stylesheet" href="styles.css?v=12">
 </head>
 <body>
     <div class="app-container">
@@ -61,9 +61,22 @@
                     </div>
                 </div>
                 <div class="player-controls">
-                    <button class="control-btn" id="rewindBtn">⏪ 30s</button>
-                    <button class="control-btn play-pause" id="playPauseBtn">▶</button>
-                    <button class="control-btn" id="forwardBtn">⏩ 30s</button>
+                    <button class="control-btn skip-btn" id="rewindBtn">
+                        <span class="skip-icon">↺</span>
+                        <span class="skip-time">30</span>
+                    </button>
+                    <button class="control-btn play-pause" id="playPauseBtn">
+                        <svg class="play-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M8 5v14l11-7z"/>
+                        </svg>
+                        <svg class="pause-icon" viewBox="0 0 24 24" fill="currentColor" style="display: none;">
+                            <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+                        </svg>
+                    </button>
+                    <button class="control-btn skip-btn" id="forwardBtn">
+                        <span class="skip-icon">↻</span>
+                        <span class="skip-time">30</span>
+                    </button>
                 </div>
                 <div class="player-progress">
                     <div class="progress-bar">
@@ -75,15 +88,45 @@
                     </div>
                 </div>
                 <div class="player-extra-controls">
-                    <div class="playback-speed">
-                        <label>Speed:</label>
-                        <button class="speed-btn" data-speed="0.5">0.5x</button>
-                        <button class="speed-btn" data-speed="0.75">0.75x</button>
-                        <button class="speed-btn active" data-speed="1">1x</button>
-                        <button class="speed-btn" data-speed="1.25">1.25x</button>
-                        <button class="speed-btn" data-speed="1.5">1.5x</button>
-                        <button class="speed-btn" data-speed="1.75">1.75x</button>
-                        <button class="speed-btn" data-speed="2">2x</button>
+                    <div class="chapters-container">
+                        <button class="chapters-btn" id="chaptersBtn" title="Chapters">
+                            📑
+                        </button>
+                        <div class="chapters-popup" id="chaptersPopup" style="display: none;">
+                            <h4>Chapters</h4>
+                            <div class="chapters-list" id="chaptersList">
+                                <p class="empty-message">No chapters available</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bookmarks-container">
+                        <button class="bookmarks-btn" id="bookmarksBtn" title="Bookmarks">
+                            🔖
+                        </button>
+                        <div class="bookmarks-popup" id="bookmarksPopup" style="display: none;">
+                            <h4>Bookmarks</h4>
+                            <button class="add-bookmark-btn" id="addBookmarkBtn">+ Add Bookmark</button>
+                            <div class="bookmarks-list" id="bookmarksList">
+                                <p class="empty-message">No bookmarks yet</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="playback-speed-container">
+                        <button class="playback-speed-btn" id="playbackSpeedBtn" title="Playback Speed">
+                            1x
+                        </button>
+                        <div class="playback-speed-popup" id="playbackSpeedPopup" style="display: none;">
+                            <h4>Playback Speed</h4>
+                            <div class="speed-options">
+                                <button class="speed-option" data-speed="0.5">0.5x</button>
+                                <button class="speed-option" data-speed="0.75">0.75x</button>
+                                <button class="speed-option active" data-speed="1">1x</button>
+                                <button class="speed-option" data-speed="1.25">1.25x</button>
+                                <button class="speed-option" data-speed="1.5">1.5x</button>
+                                <button class="speed-option" data-speed="1.75">1.75x</button>
+                                <button class="speed-option" data-speed="2">2x</button>
+                            </div>
+                        </div>
                     </div>
                     <div class="sleep-timer-container">
                         <button class="sleep-timer-btn" id="sleepTimerBtn" title="Sleep Timer">
@@ -109,8 +152,8 @@
         </main>
     </div>
 
-    <script src="api.js?v=9"></script>
-    <script src="app.js?v=9"></script>
+    <script src="api.js?v=18"></script>
+    <script src="app.js?v=18"></script>
 </body>
 </html>
 

@@ -1,15 +1,14 @@
 /* Dark Modern Theme */
 :root {
-    --bg-primary: #0f0f0f;
-    --bg-secondary: #1a1a1a;
-    --bg-tertiary: #252525;
+    --bg-primary: #0a0a0a;
+    --bg-secondary: #161616;
+    --bg-tertiary: #222222;
     --text-primary: #ffffff;
-    --text-secondary: #b3b3b3;
-    --accent: #6366f1;
-    --accent-hover: #818cf8;
-    --border: #333333;
+    --text-secondary: #a0a0a0;
+    --accent: #dc2626;
+    --accent-hover: #ef4444;
     --success: #10b981;
-    --error: #ef4444;
+    --border: #2a2a2a;
 }
 
 * {
@@ -45,7 +44,10 @@ body {
 .logo {
     font-size: 28px;
     font-weight: 700;
-    color: var(--accent);
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .user-btn {
@@ -183,8 +185,9 @@ body {
 }
 
 .library-card:hover {
-    border-color: var(--accent);
+    border-color: var(--text-secondary);
     transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .library-card h3 {
@@ -215,8 +218,9 @@ body {
 }
 
 .item-card:hover {
-    border-color: var(--accent);
+    border-color: var(--text-secondary);
     transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .item-cover {
@@ -314,31 +318,63 @@ body {
     background: var(--bg-tertiary);
     border: 1px solid var(--border);
     color: var(--text-primary);
-    width: 50px;
-    height: 50px;
+    width: 56px;
+    height: 56px;
     border-radius: 50%;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
+    font-size: 20px;
     transition: all 0.2s;
+    position: relative;
 }
 
 .control-btn:hover {
-    background: var(--bg-primary);
-    border-color: var(--accent);
+    background: var(--bg-secondary);
+    border-color: var(--border);
+    transform: scale(1.05);
+}
+
+.skip-btn {
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px;
+}
+
+.skip-icon {
+    font-size: 24px;
+    line-height: 1;
+    font-weight: bold;
+}
+
+.skip-time {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.skip-btn:hover .skip-time {
+    color: var(--text-primary);
 }
 
 .play-pause {
-    width: 60px;
-    height: 60px;
+    width: 70px;
+    height: 70px;
     background: var(--accent);
     border-color: var(--accent);
+    border-width: 2px;
 }
 
 .play-pause:hover {
     background: var(--accent-hover);
+    border-color: var(--accent-hover);
+    transform: scale(1.08);
+}
+
+.play-pause svg {
+    width: 28px;
+    height: 28px;
 }
 
 .player-progress {
@@ -373,43 +409,279 @@ body {
 /* Player Extra Controls */
 .player-extra-controls {
     display: flex;
-    gap: 30px;
+    gap: 15px;
     align-items: center;
     flex-wrap: wrap;
 }
 
-.playback-speed {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+/* Playback Speed */
+.playback-speed-container {
+    position: relative;
 }
 
-.playback-speed label {
-    font-size: 13px;
-    color: var(--text-secondary);
-    white-space: nowrap;
-}
-
-.speed-btn {
+.playback-speed-btn {
     background: var(--bg-tertiary);
     border: 1px solid var(--border);
     color: var(--text-primary);
-    padding: 6px 12px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: 50px;
+}
+
+.playback-speed-btn:hover {
+    background: var(--bg-primary);
+    border-color: var(--accent);
+}
+
+.playback-speed-popup {
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    margin-bottom: 10px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 15px;
+    min-width: 200px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+}
+
+.playback-speed-popup h4 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+.speed-options {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+
+.speed-option {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    padding: 8px;
     border-radius: 6px;
     font-size: 12px;
     cursor: pointer;
     transition: all 0.2s;
 }
 
-.speed-btn:hover {
+.speed-option:hover {
     background: var(--bg-primary);
     border-color: var(--accent);
 }
 
-.speed-btn.active {
-    background: var(--accent);
-    border-color: var(--accent);
+.speed-option.active {
+    background: var(--success);
+    border-color: var(--success);
     color: white;
+    font-weight: 600;
+}
+
+/* Chapters */
+.chapters-container {
+    position: relative;
+}
+
+.chapters-btn {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.chapters-btn:hover {
+    background: var(--bg-primary);
+    border-color: var(--accent);
+}
+
+.chapters-popup {
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    margin-bottom: 10px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 15px;
+    min-width: 280px;
+    max-width: 320px;
+    max-height: 400px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+}
+
+.chapters-popup h4 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+.chapters-list {
+    max-height: 340px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.chapter-item {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.chapter-item:hover {
+    background: var(--bg-primary);
+    border-color: var(--accent);
+}
+
+.chapter-title {
+    font-size: 13px;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+    font-weight: 500;
+}
+
+.chapter-time {
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+/* Bookmarks */
+.bookmarks-container {
+    position: relative;
+}
+
+.bookmarks-btn {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.bookmarks-btn:hover {
+    background: var(--bg-primary);
+    border-color: var(--accent);
+}
+
+.bookmarks-popup {
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    margin-bottom: 10px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 15px;
+    min-width: 280px;
+    max-width: 320px;
+    max-height: 400px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+}
+
+.bookmarks-popup h4 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+.add-bookmark-btn {
+    width: 100%;
+    background: var(--success);
+    border: 1px solid var(--success);
+    color: white;
+    padding: 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 10px;
+}
+
+.add-bookmark-btn:hover {
+    opacity: 0.9;
+}
+
+.bookmarks-list {
+    max-height: 300px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.bookmark-item {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.bookmark-item:hover {
+    background: var(--bg-primary);
+    border-color: var(--accent);
+}
+
+.bookmark-info {
+    flex: 1;
+}
+
+.bookmark-title {
+    font-size: 13px;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+    font-weight: 500;
+}
+
+.bookmark-time {
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+.bookmark-delete {
+    background: transparent;
+    border: none;
+    color: var(--accent);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 4px 8px;
+    transition: all 0.2s;
+}
+
+.bookmark-delete:hover {
+    color: var(--accent-hover);
+}
+
+.empty-message {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 12px;
+    padding: 20px;
 }
 
 /* Sleep Timer */
@@ -438,12 +710,12 @@ body {
     position: absolute;
     top: -5px;
     right: -5px;
-    background: var(--accent);
+    background: var(--success);
     color: white;
     font-size: 10px;
     padding: 2px 6px;
     border-radius: 10px;
-    font-weight: 500;
+    font-weight: 600;
 }
 
 .sleep-timer-popup {
@@ -489,9 +761,10 @@ body {
 }
 
 .timer-option.active {
-    background: var(--accent);
-    border-color: var(--accent);
+    background: var(--success);
+    border-color: var(--success);
     color: white;
+    font-weight: 600;
 }
 
 /* Responsive */
