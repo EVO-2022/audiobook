@@ -346,6 +346,20 @@ class App {
                 this.audioPlayer.currentTime + 30
             );
         };
+
+        // Setup seekable progress bar
+        const progressBar = document.querySelector('.progress-bar');
+        progressBar.onclick = (e) => {
+            if (!this.audioPlayer || !this.audioPlayer.duration) return;
+
+            const rect = progressBar.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const width = rect.width;
+            const percentage = clickX / width;
+            const seekTime = percentage * this.audioPlayer.duration;
+
+            this.audioPlayer.currentTime = Math.max(0, Math.min(seekTime, this.audioPlayer.duration));
+        };
     }
 
     hidePlayer() {
